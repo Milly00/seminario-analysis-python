@@ -10,11 +10,13 @@ import re
 #nltk.download('vader_lexicon') 
 #from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import datetime
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
 class Scrap():
 
     def __init__(self) -> None:
-        self.api_key = "apify_api_ckB1aNrtejcdli9Qw2CHyaZ7cmop7A1n0Y4a"
+        self.api_key = os.getenv('API_KEY_APIFY')
         self.analyzer = create_analyzer(task="sentiment", lang="es")
         self.sentiment = create_analyzer(task="emotion",lang = "es")
     

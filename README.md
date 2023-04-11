@@ -49,7 +49,10 @@ Se encarga de realizar el scrapper
     
     pip install nltk
 
-## Re
+## python-dotenv
+
+    pip install python-dotenv
+
 
 ## Estructura
 

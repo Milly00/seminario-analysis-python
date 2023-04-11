@@ -8,10 +8,13 @@ import datetime
 
 import pandas as pd
 
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__) #Instancia de una app
 #app.config['MONGO_URI']='mongodb://localhost:27017/seminario' #cadena de conexion
-app.config['MONGO_URI']='mongodb+srv://mean_user:DSZTXYsUeVc045Ox@cluster0.0bbgsoe.mongodb.net/seminario' #cadena de conexion
+app.config['MONGO_URI']= os.getenv('MONGO_URI') #cadena de conexion
 CORS(app)
 
 mongo = PyMongo(app) #Pasamos la cadena de conexion para conectarnos a la BD
@@ -102,10 +105,10 @@ def saveStatistic(id_publication, data):
         date = datetime.datetime.now()
         data_matriz = []
         for value in data:
-            element = [value['autor'], value['puntuacion'], value['etiqueta'], value['emocion'], value['likes'], value['fecha']]
+            element = [value['autor'], value['puntuacion'], value['etiqueta'], value['emocion'], value['likes'], value['fecha'],value['original_texto']]
             data_matriz.append(element)
         
-        df_matriz = pd.DataFrame(data_matriz, columns=["Author", "Score", "Polarity", "Emotion", "Likes", "Date"])
+        df_matriz = pd.DataFrame(data_matriz, columns=["Author", "Score", "Polarity", "Emotion", "Likes", "Date","Text"])
         
         description = df_matriz.describe()
         polarity = df_matriz.Polarity.value_counts()
