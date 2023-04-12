@@ -91,7 +91,7 @@ class Scrap():
             try:
                 # Fetch and print actor results from the run's dataset (if there are any)
                 for item in client.dataset(run["defaultDatasetId"]).iterate_items():
-                    print(item)
+                    #print(item)
                     #Obtenemos el texto del comentario
                     text_comment = item['full_text']
                     #Traducimos el texto para un mejor analisis
@@ -109,7 +109,7 @@ class Scrap():
                 #df = pd.DataFrame(serie)
                 #df.to_csv('myfiletwitter.csv')
 
-                print(posts)
+                #print(posts)
             except:
                 print("Los datos a evaluar no tienen un formato válido")
         except:
