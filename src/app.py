@@ -23,7 +23,7 @@ scrap =  Scrap()
 
 @app.route('/')
 def index():
-    return '<h1>Hello!</h1>'
+    return jsonify({'hello': 'world'})
 
 @app.route('/analysis', methods=['POST'])
 def createPublication():
@@ -153,4 +153,6 @@ def service_error(error = None):
 if __name__ == "__main__":
     #from waitress import serve
     #serve(app, host="0.0.0.0", port=8080)
-    app.run(debug=False,port=8000)
+    app.run(debug=True,port=8000)
+    app.config['TESTING'] = True
+    app.config['DEBUG'] = True
