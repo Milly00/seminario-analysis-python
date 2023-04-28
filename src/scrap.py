@@ -47,17 +47,19 @@ class Scrap():
                     #print(item)
                     #Obtenemos el texto del comentario
                     text_comment = self.remove_emoji(item['text'])
+                    text_without_mencion =  re.sub("@[A-Za-z0-9_]+","", text_comment)
+
                     #Traducimos el texto para un mejor analisis
                     #translante_text = self.translate(text_comment)
                     #analisamos el texto traducido
                     #analysis = self.analysisSentiment(text_comment)
-                    if text_comment != '' and len(text_comment) > 0:
+                    if text_without_mencion != '' and len(text_without_mencion) > 0:
                         analysis_res = self.analyzer.predict(text_comment)
                         emotion = self.sentiment.predict(text_comment)
                         #print(analysis_res)
                         score = self.calculateScore(analysis_res.probas,analysis_res.output)
 
-                        temporal = {"id_comentario": item['id'],"autor": item["ownerUsername"],"likes": item["likesCount"],"original_texto": self.remove_emoji(text_comment),"puntuacion": score,"fecha": str(item["timestamp"]),"etiqueta": analysis_res.output , "res_analisis": analysis_res.probas , "emocion": emotion.output , "res_emocion": emotion.probas}
+                        temporal = {"id_comentario": item['id'],"autor": item["ownerUsername"],"likes": item["likesCount"],"original_texto": item['text'],"puntuacion": score,"fecha": str(item["timestamp"]),"etiqueta": analysis_res.output , "res_analisis": analysis_res.probas , "emocion": emotion.output , "res_emocion": emotion.probas}
                         posts.append(temporal)
                     #serie.append([item['id'],item["ownerUsername"],item["likesCount"],analysis['compound'],str(item["timestamp"])])
                 
