@@ -23,7 +23,7 @@ scrap =  Scrap()
 
 @app.route('/')
 def index():
-    return '<h1>Hello!</h1>'
+    return jsonify({'hello': 'world'})
 
 @app.route('/analysis', methods=['POST'])
 def createPublication():
@@ -70,10 +70,11 @@ def createStatistic():
         #print(request.json)
         id_publication = request.json['name_post']
         data = request.json['data']
+        owner = request.json['owner']
 
         new_data = scrap.generateStatistic(data)
         #print('newdata:'+new_data)
-        saveStatistic(id_publication, new_data)
+        saveStatistic(id_publication, new_data,owner)
         
         res = {'ok': True, 'data': new_data}
         return res
@@ -91,7 +92,7 @@ def savePublication(data,id,id_admin,descripcion,n_redsocial,url_publicacion, au
             date = datetime.datetime.now()
             #data = scrap.analysisSentiment(url_publicacion)
             #print(data)
-            mongo.db.publications.insert_one({"datos": data , "fpublicacion": date,"pid": id,"uid": id_admin,"numcomentarios": scrap.totalData(data), "descripcion": descripcion,"nredsocial": n_redsocial, "urlpublicacion": url_publicacion, "autor": autor,"categoria": categoria})
+            mongo.db.publications.insert_one({"data": data , "createdAt": date,"pid": id,"uid": id_admin,"total_data": scrap.totalData(data), "description": descripcion,"social_network": n_redsocial, "url_publication": url_publicacion, "owner": autor,"category": categoria})
         except Exception as err:
             print('ERRROR saveP')
             print(err)
@@ -99,16 +100,16 @@ def savePublication(data,id,id_admin,descripcion,n_redsocial,url_publicacion, au
 
 
 
-def saveStatistic(id_publication, data):
+def saveStatistic(id_publication, data,autor):
     try:
         #print(id_publication, data)
         date = datetime.datetime.now()
         data_matriz = []
         for value in data:
-            element = [value['autor'], value['puntuacion'], value['etiqueta'], value['emocion'], value['likes'], value['fecha'],value['original_texto']]
+            element = [value['autor'], value['puntuacion'], value['etiqueta'], value['emocion'], value['likes'], value['fecha']]
             data_matriz.append(element)
         
-        df_matriz = pd.DataFrame(data_matriz, columns=["Author", "Score", "Polarity", "Emotion", "Likes", "Date","Text"])
+        df_matriz = pd.DataFrame(data_matriz, columns=["Author", "Score", "Polarity", "Emotion", "Likes", "Date"])
         
         description = df_matriz.describe()
         polarity = df_matriz.Polarity.value_counts()
@@ -119,7 +120,7 @@ def saveStatistic(id_publication, data):
         count_emotions_db = count_emotions.to_json()
 
         
-        mongo.db.statistics.insert_one({"id_publication": id_publication , "date_statistic": date, "data": data, "description": description_db, "polarity": polarity_db, "count_emotions": count_emotions_db})
+        mongo.db.statistics.insert_one({"pid": id_publication , "createdAt": date, "data": data, "description": description_db, "polarity": polarity_db, "count_emotions": count_emotions_db,"owner": autor})
         
     except Exception as err:
         print('ERROR saveStatistic')
@@ -152,4 +153,6 @@ def service_error(error = None):
 if __name__ == "__main__":
     #from waitress import serve
     #serve(app, host="0.0.0.0", port=8080)
-    app.run(debug=False,port=8000)
+    app.run(debug=True,port=8000)
+    app.config['TESTING'] = True
+    app.config['DEBUG'] = True
