@@ -53,9 +53,18 @@ Se encarga de realizar el scrapper
 
     pip install python-dotenv
 
+## py-sentimiento
+
+    pip install pysentimiento
+
+## Pytest
+    pip install -U pytest
 
 ## Estructura
 
     src: Archivos de la api
     venv: Archivos del entorno virtual
+
+## Run API
+    python src/app.py
 
