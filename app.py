@@ -3,7 +3,7 @@ from flask_pymongo import PyMongo
 from pymongo import MongoClient
 
 from flask_cors import CORS
-from scrap import Scrap #recordar instalar el paquete
+from src.scrap import Scrap
 import datetime
 
 import pandas as pd
@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__) #Instancia de una app
+
 #app.config['MONGO_URI']='mongodb://localhost:27017/seminario' #cadena de conexion
 app.config['MONGO_URI']= os.getenv('MONGO_URI') #cadena de conexion
 CORS(app)
