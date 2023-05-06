@@ -1,0 +1,4 @@
+# gitingnore
+venv
+src/__pycache__
+.env

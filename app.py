@@ -3,7 +3,7 @@ from flask_pymongo import PyMongo
 from pymongo import MongoClient
 
 from flask_cors import CORS
-from scrap import Scrap #recordar instalar el paquete
+from src.scrap import Scrap #recordar instalar el paquete
 import datetime
 
 import pandas as pd

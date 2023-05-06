@@ -54,6 +54,10 @@ Se encarga de realizar el scrapper
     pip install python-dotenv
 
 
+## pysentimiento
+
+    pip install pysentimiento
+
 ## Estructura
 
     src: Archivos de la api
