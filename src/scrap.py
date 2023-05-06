@@ -1,11 +1,9 @@
 from apify_client import ApifyClient
 import pandas as pd
-from deep_translator import GoogleTranslator
 from pysentimiento import create_analyzer
 
 import json
 
-import nltk
 import re
 #nltk.download('vader_lexicon') 
 #from nltk.sentiment.vader import SentimentIntensityAnalyzer
@@ -44,29 +42,20 @@ class Scrap():
             # Fetch and print actor results from the run's dataset (if there are any)
             try:
                 for item in client.dataset(run["defaultDatasetId"]).iterate_items():
-                    #print(item)
                     #Obtenemos el texto del comentario
                     text_comment = self.remove_emoji(item['text'])
-                    text_without_mencion =  re.sub("@[A-Za-z0-9_]+","", text_comment)
-
-                    #Traducimos el texto para un mejor analisis
-                    #translante_text = self.translate(text_comment)
-                    #analisamos el texto traducido
-                    #analysis = self.analysisSentiment(text_comment)
-                    if text_without_mencion != '' and len(text_without_mencion) > 0:
+                    patron = r'@\w+\s?'
+                    text_without_mencion =  re.sub(patron,"", text_comment)
+                    #@[A-Za-z0-9_]+
+                    if text_without_mencion != '' and len(text_without_mencion) > 15:
                         analysis_res = self.analyzer.predict(text_comment)
                         emotion = self.sentiment.predict(text_comment)
                         #print(analysis_res)
                         score = self.calculateScore(analysis_res.probas,analysis_res.output)
 
-                        temporal = {"id_comentario": item['id'],"autor": item["ownerUsername"],"likes": item["likesCount"],"original_texto": item['text'],"puntuacion": score,"fecha": str(item["timestamp"]),"etiqueta": analysis_res.output , "res_analisis": analysis_res.probas , "emocion": emotion.output , "res_emocion": emotion.probas}
+                        temporal = {"id_comentario": item['id'],"likes": item["likesCount"],"original_texto": text_without_mencion,"puntuacion": score,"fecha": str(item["timestamp"]),"etiqueta": analysis_res.output , "res_analisis": analysis_res.probas , "emocion": emotion.output , "res_emocion": emotion.probas}
                         posts.append(temporal)
-                    #serie.append([item['id'],item["ownerUsername"],item["likesCount"],analysis['compound'],str(item["timestamp"])])
-                
-                #df = pd.DataFrame(serie)
-                #df.to_csv('myfile.csv')
 
-                #print(posts)
                 return posts
             except ValueError as ve:
                 print("Los datos a evaluar no tienen un formato válido")
@@ -75,7 +64,7 @@ class Scrap():
         
 
     #Agregar variable de retorno
-    def loadDataTwitter(self,profile_name,title,url_publicacion):
+    def loadDataTwitter(self,url_publicacion):
         # Initialize the ApifyClient with your API token
         posts = []
         try:
@@ -84,11 +73,10 @@ class Scrap():
             #serie = []
             # Prepare the actor input
             run_input = {
-            "startUrls": [{ "url": "https://twitter.com/DiegoASantos/status/1638008508456091651" }],
+            "startUrls": [{ "url": url_publicacion }],
             "tweetsDesired": 100,
             }
 
-            # Run the actor and wait for it to finish
             # Run the actor and wait for it to finish
             run = client.actor("quacker/twitter-scraper").call(run_input=run_input)
             try:
@@ -96,23 +84,17 @@ class Scrap():
                 for item in client.dataset(run["defaultDatasetId"]).iterate_items():
                     #print(item)
                     #Obtenemos el texto del comentario
-                    text_comment = item['full_text']
-                    #Traducimos el texto para un mejor analisis
-                    #translante_text = self.translate(text_comment)
-                    #analisamos el texto traducido
-                    #analysis = self.analysisSentiment(translante_text)
-                    analysis_res = self.analyzer.predict(text_comment)
-                    score = self.calculateScore(analysis_res.probas)
-                    emotion = self.sentiment.predict(text_comment)
-                    user = item["user"]
-                    temporal = {"id_comentario": item['conversation_id'],"autor": user["screen_name"],"likes": item["favorite_count"],"original_texto": self.remove_emoji(text_comment),"puntuacion": score,"fecha": str(item["created_at"]),"etiqueta": analysis_res.output , "res_analisis": analysis_res.probas , "emocion": emotion.output , "res_emocion": emotion.probas}
-                    posts.append(temporal)
-                    #serie.append([item['conversation_id'],user["screen_name"],item["favorite_count"],analysis['compound'],str(item["created_at"])])
-                
-                #df = pd.DataFrame(serie)
-                #df.to_csv('myfiletwitter.csv')
+                    text_comment = self.remove_emoji(item['full_text'])
+                    patron = r'@\w+\s?'
+                    text_without_mencion =  re.sub(patron,"", text_comment)
+                    if text_without_mencion != '' and len(text_without_mencion) > 15:
+                        analysis_res = self.analyzer.predict(text_comment)
+                        emotion = self.sentiment.predict(text_comment)
+                        score = self.calculateScore(analysis_res.probas,analysis_res.output)
+                        temporal = {"id_comentario": item['conversation_id'],"likes": item["favorite_count"],"original_texto": text_without_mencion,"puntuacion": score,"fecha": str(item["created_at"]),"etiqueta": analysis_res.output , "res_analisis": analysis_res.probas , "emocion": emotion.output , "res_emocion": emotion.probas}
+                        posts.append(temporal)
 
-                #print(posts)
+                return posts
             except:
                 print("Los datos a evaluar no tienen un formato válido")
         except:
@@ -158,19 +140,10 @@ class Scrap():
         
         for item in data:
             #anger, disgust  = data.res_emocion
-            transform_data.append({"autor": item['autor'], "fecha": item['fecha'], "puntuacion": item['puntuacion'], "etiqueta": item['etiqueta'], "emocion": item['emocion'], "likes": item['likes'], "anger": item['res_emocion']['anger'], "disgust": item['res_emocion']['disgust'], "fear": item['res_emocion']['fear'], "joy": item['res_emocion']['joy'], "others": item['res_emocion']['others'], "sadness": item['res_emocion']['sadness'], "surprise": item['res_emocion']['surprise']})
+            transform_data.append({ "fecha": item['fecha'], "puntuacion": item['puntuacion'], "etiqueta": item['etiqueta'], "emocion": item['emocion'], "likes": item['likes'], "anger": item['res_emocion']['anger'], "disgust": item['res_emocion']['disgust'], "fear": item['res_emocion']['fear'], "joy": item['res_emocion']['joy'], "others": item['res_emocion']['others'], "sadness": item['res_emocion']['sadness'], "surprise": item['res_emocion']['surprise']})
         print('transform',transform_data)
         return transform_data
 
-    def translate(self,data):
-        try:
-            traductor = GoogleTranslator(source='es', target='en')
-            result = traductor.translate(data)
-            #Limpiamos el texto, eliminado los emojis
-            r_result = self.remove_emoji(str(result)) 
-            return r_result
-        except:
-            print("No se pudo realizar la traducción")
     
     def remove_emoji(self,string):
 
