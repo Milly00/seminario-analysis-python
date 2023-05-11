@@ -3,7 +3,7 @@ from flask_pymongo import PyMongo
 from pymongo import MongoClient
 
 from flask_cors import CORS
-from src.scrap import Scrap
+from src.scrap import Scrap #recordar instalar el paquete
 import datetime
 
 import pandas as pd
@@ -44,17 +44,18 @@ def createPublication():
             data = scrap.loadData(url_publicacion)
 
         if(n_redsocial == 'twitter'):
-            data = scrap.loadData(url_publicacion)
+            data = scrap.loadDataTwitter(url_publicacion)
         
         if profile_name and name_post  and id_admin and descripcion and n_redsocial and url_publicacion and category:
             #comentar el método en caso de que no haya conx con la BD
             
-            savePublication(data, name_post,id_admin,descripcion,n_redsocial,url_publicacion,profile_name, category)
+            id_p = savePublication(data, name_post,id_admin,descripcion,n_redsocial,url_publicacion,profile_name, category)
             #saveStatistic(data, name_post)
             response = jsonify({
             'message': 'Se ha registrado su publicación',
             'status': 200,
-            'data': data
+            'data': data,
+            '_id' : str(id_p)
             })
 
             #Llamar el método de crear estadisticas
@@ -72,10 +73,12 @@ def createStatistic():
         id_publication = request.json['name_post']
         data = request.json['data']
         owner = request.json['owner']
+        p_id = request.json['p_id']
+
 
         new_data = scrap.generateStatistic(data)
         #print('newdata:'+new_data)
-        saveStatistic(id_publication, new_data,owner)
+        saveStatistic(id_publication, new_data,owner,p_id)
         
         res = {'ok': True, 'data': new_data}
         return res
@@ -93,7 +96,9 @@ def savePublication(data,id,id_admin,descripcion,n_redsocial,url_publicacion, au
             date = datetime.datetime.now()
             #data = scrap.analysisSentiment(url_publicacion)
             #print(data)
-            mongo.db.publications.insert_one({"data": data , "createdAt": date,"pid": id,"uid": id_admin,"total_data": scrap.totalData(data), "description": descripcion,"social_network": n_redsocial, "url_publication": url_publicacion, "owner": autor,"category": categoria})
+            res = mongo.db.publications.insert_one({"data": data , "createdAt": date,"pid": id,"uid": id_admin,"total_data": scrap.totalData(data), "description": descripcion,"social_network": n_redsocial, "url_publication": url_publicacion, "owner": autor,"category": categoria})
+            print(res.inserted_id)
+            return res.inserted_id
         except Exception as err:
             print('ERRROR saveP')
             print(err)
@@ -101,16 +106,16 @@ def savePublication(data,id,id_admin,descripcion,n_redsocial,url_publicacion, au
 
 
 
-def saveStatistic(id_publication, data,autor):
+def saveStatistic(id_publication, data,autor,p_id):
     try:
         #print(id_publication, data)
         date = datetime.datetime.now()
         data_matriz = []
         for value in data:
-            element = [value['autor'], value['puntuacion'], value['etiqueta'], value['emocion'], value['likes'], value['fecha']]
+            element = [value['puntuacion'], value['etiqueta'], value['emocion'], value['likes'], value['fecha']]
             data_matriz.append(element)
         
-        df_matriz = pd.DataFrame(data_matriz, columns=["Author", "Score", "Polarity", "Emotion", "Likes", "Date"])
+        df_matriz = pd.DataFrame(data_matriz, columns=["Score", "Polarity", "Emotion", "Likes", "Date"])
         
         description = df_matriz.describe()
         polarity = df_matriz.Polarity.value_counts()
@@ -121,7 +126,7 @@ def saveStatistic(id_publication, data,autor):
         count_emotions_db = count_emotions.to_json()
 
         
-        mongo.db.statistics.insert_one({"pid": id_publication , "createdAt": date, "data": data, "description": description_db, "polarity": polarity_db, "count_emotions": count_emotions_db,"owner": autor})
+        mongo.db.statistics.insert_one({"pid": id_publication ,"p_id": p_id, "createdAt": date, "data": data, "description": description_db, "polarity": polarity_db, "count_emotions": count_emotions_db,"owner": autor})
         
     except Exception as err:
         print('ERROR saveStatistic')

@@ -60,6 +60,10 @@ Se encarga de realizar el scrapper
 ## Pytest
     pip install -U pytest
 
+## pysentimiento
+
+    pip install pysentimiento
+
 ## Estructura
 
     src: Archivos de la api

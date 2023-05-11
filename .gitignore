@@ -1,2 +1,4 @@
 # gitingnore
+
 venv
+.env
